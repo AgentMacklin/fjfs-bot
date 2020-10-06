@@ -1,5 +1,6 @@
 import * as Discord from "discord.js"
 import config from "./config"
+import { getRandomDadJoke, getInsult } from "./api"
 
 const whoIsImpostor = async (message: Discord.Message) => {
   const members = await message.guild.members.fetch()
@@ -15,8 +16,8 @@ const whoIsImpostor = async (message: Discord.Message) => {
 }
 
 const handleQuestion = (message: Discord.Message) => {
-  const question = message.content.slice(config.prefixes.question.length)
-  switch (question) {
+  const question = message.content.slice(config.prefixes.question.length).split(" ")
+  switch (question[0]) {
     case "impostor":
       whoIsImpostor(message)
       break
@@ -27,12 +28,18 @@ const handleQuestion = (message: Discord.Message) => {
   }
 }
 
-const handleAction = (message: Discord.Message) => {
-  const action = message.content.slice(config.prefixes.question.length)
-  switch (action) {
-    // case value:
+const handleAction = async (message: Discord.Message) => {
+  const action = message.content.slice(config.prefixes.question.length).split(" ")
+  switch (action[0]) {
+    case "joke":
+      const joke = await getRandomDadJoke()
+      message.channel.send(joke)
+      break
 
-    //   break;
+    case "insult":
+      const insult = await getInsult(action[1])
+      message.channel.send(insult)
+      break
 
     default:
       message.channel.send("Hmm, not sure what that action is.")
