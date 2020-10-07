@@ -1,22 +1,20 @@
 import * as Discord from "discord.js"
+import { getInsult, getRandomDadJoke } from "./api"
 import config from "./config"
-import { getRandomDadJoke, getInsult } from "./api"
 
 const whoIsImpostor = async (message: Discord.Message) => {
   const members = await message.guild.members.fetch()
-  let impostor: Discord.User
 
-  // Make sure the bot doesn't say it's the impostor
-  while (true) {
-    impostor = members.random().user
-    if (!impostor.bot) break
-  }
-
+  // Remove bots from pool of members, so the bot always accuses a person
+  const nonBots = members.filter(member => !member.user.bot)
+  const impostor = nonBots.random().user
   message.channel.send(`${impostor.username} is the impostor!`)
 }
 
 const handleQuestion = (message: Discord.Message) => {
-  const question = message.content.slice(config.prefixes.question.length).split(" ")
+  const question = message.content
+    .slice(config.prefixes.question.length)
+    .split(" ")
   switch (question[0]) {
     case "impostor":
       whoIsImpostor(message)
@@ -29,7 +27,9 @@ const handleQuestion = (message: Discord.Message) => {
 }
 
 const handleAction = async (message: Discord.Message) => {
-  const action = message.content.slice(config.prefixes.question.length).split(" ")
+  const action = message.content
+    .slice(config.prefixes.question.length)
+    .split(" ")
   switch (action[0]) {
     case "joke":
       const joke = await getRandomDadJoke()
