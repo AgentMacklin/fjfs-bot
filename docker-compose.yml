@@ -6,3 +6,8 @@ services:
     restart: always
     ports:
       - "3000:3000"
+  client:
+    build: ./client
+    restart: always
+    ports:
+      - "80:80"

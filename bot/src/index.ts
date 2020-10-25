@@ -1,14 +1,10 @@
 import * as Discord from "discord.js"
 import config from "./config.js"
 import command from "./commands"
-import express from 'express'
-const cors = require('cors')
+import io from "socket.io"
 
 const bot = new Discord.Client()
-const server = express()
-const port = 3000
-server.use(cors())
-
+const wss = io()
 
 // Bot behavior for events in discord itself
 bot.once("ready", () => {
@@ -22,12 +18,21 @@ bot.on("message", message => {
 
 bot.login(config.token)
 
+wss.on("connection", socket => {
+  console.log("client connected")
 
-server.get("/", (req, res) => {
-  const msg = {data: "Hello, world!"}
-  res.send(msg)
+  socket.on("get-channels", () => {
+    console.log("Emitting channels")
+    const channels = bot.channels.cache.toJSON()
+    socket.emit("channels", JSON.stringify(channels))
+  })
+
+  socket.on("send-message", data => {
+    const channel = bot.channels.cache.get(data.channel)
+    if (channel.isText()) {
+      channel.send(data.message)
+    }
+  })
 })
 
-server.listen(port, () => {
-  console.log(`Bot client server running at http://${process.env.HOSTNAME}:${port}`)
-})
+wss.listen(3000)

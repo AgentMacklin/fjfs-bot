@@ -1,35 +1,59 @@
 <template>
   <form id="message-form" v-on:submit.prevent="sendMessage">
-    <label for="message">Send Message</label>
-    <textarea name="message" id="" v-model="message" />
-    <button type="submit" class="primary right">Send</button>
+    <label class="label" for="message">Send Message</label>
+    <textarea name="message" id="" v-model="message" class="textarea" />
+    <div class="form-controls">
+      <div class="select">
+        <select v-model="selectedChannel">
+          <option value="" disabled selected>Select a channel...</option>
+          <option v-for="(chan, i) in channels" :key="i" :value="chan.id">{{
+            chan.name
+          }}</option>
+        </select>
+      </div>
+      <button type="submit" class="button is-link" style="margin-left: 1rem">
+        Send
+      </button>
+    </div>
   </form>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from "vue"
-import api from "@/api"
+import { defineComponent, reactive, inject, toRefs } from "vue"
+import socket from "@/socket"
 
 export default defineComponent({
   setup() {
-    const message = ref<string>("")
+    const channels: any | undefined = inject("channels")
 
-    onMounted(async () => {
-      const response = await api.get("/")
-      console.log(response.data.data)
+    const state = reactive({
+      message: "",
+      selectedChannel: ""
     })
 
+    // send a message "from the bot" to a given channel
     const sendMessage = () => {
-      console.log(message.value)
-      message.value = ""
+      if (state.selectedChannel === "") {
+        alert("Please select a channel")
+        return
+      }
+      socket.emit("send-message", {
+        channel: state.selectedChannel,
+        message: state.message
+      })
+      state.message = ""
     }
 
-    return { message, sendMessage }
+    return { ...toRefs(state), channels, sendMessage }
   }
 })
 </script>
 
-<style>
+<style scoped>
+.form-controls {
+  margin: 1rem 0;
+}
+
 #message-form {
   margin: 1rem 0;
 }
